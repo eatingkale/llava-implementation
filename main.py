@@ -104,3 +104,57 @@ if __name__ == "__main__":
     main()
 
 
+"""
+===== Notes ====
+
+====== image pipeline ====== 
+(Image): .png/.jpg, local or remote 
+    |
+    | jpg -> Image: load image using PIL to get an Image
+    | Image -> Tensor: do we use the Siglip Processor here? (autoprocessor??)
+    |                   or something manual?
+    V
+(X_v)
+    |
+    V
+(Vision Encoder): Siglip2 (modified CLIP) input needs to be a tensor? or image? shape?
+    | 
+    | inference
+    V
+(Visual Features)
+    | 
+    | project to LM space via W: W @ visual features
+    | 
+    V
+(H_v): the LM-dim embedding.
+
+====== Text ====== 
+(instruct dataset): 'conversations' 
+
+(X_q)
+
+(H_q)
+
+
+====== Getting LM response ======
+(H_v) (H_q)
+    | Concatenate
+    |
+    V
+(input to lm) = concat(h_v, h_q)
+    |
+    | pass through LM
+    |
+    V
+(X_a: Language response)
+
+
+====== evaluation or loss computation ======
+(X_a)
+| 
+| 
+|
+V
+to be continued ..
+
+"""
