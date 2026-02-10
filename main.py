@@ -84,6 +84,10 @@ class LLaVAModel(): # what do we inherit?
         # Trainer is a complete training and evaluation loop for Transformers’ PyTorch models. 
         # Pass your model, dataset, preprocessor, and TrainingArguments to Trainer, and call train() to start training.
     # --> Probably don't need to make a custom class
+    # do we need to define train_step?
+    # def train_step(W, other inputs):
+    #   forward -> compute loss on ground truth -> backprop
+    #   return new weights 
 
 def main():
     print("Hello from llava-implementation!")
@@ -129,11 +133,18 @@ if __name__ == "__main__":
 (H_v): the LM-dim embedding.
 
 ====== Text ====== 
-(instruct dataset): 'conversations' 
-
-(X_q)
-
-(H_q)
+(instruct dataset): 'conversations' in data[0] Datasets
+    | no change?
+    V
+(X_q): dict of the human-LM 'conversations' or instruction
+    |
+    | Tokenization?
+    V
+(Tokenized X_q)
+    |
+    | Going from tokenization to embedding =?
+    V
+(H_q): language embedding of dim equal to LM input dim
 
 
 ====== Getting LM response ======
@@ -152,9 +163,9 @@ if __name__ == "__main__":
 ====== evaluation or loss computation ======
 (X_a)
 | 
-| 
+| comparison to ground truth
 |
 V
-to be continued ..
+
 
 """
