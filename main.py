@@ -13,11 +13,13 @@ import torch
 
 
 # << dataset definition >>
-    # class LLaVADataset(Dataset): #is this the correct superclass
+    # class LLaVADataset(torch.Dataset):
     #     def __init__():
     #         temp = 1
     #         #what normally goes in here, a transform? the function to find the image from 'image' ?
     #         # does tokenization go here????
+    #      __len__(self)
+    #       __getitem__(self,idx)
 
     # Example data point, corresponding to the way I loaded data in brainstorming.ipynb "load instruction tuning dataset"
     # data[0] =
@@ -39,9 +41,9 @@ import torch
 
 
 # << llava model definition >>
-class LLaVAModel(): # what do we inherit?
+class LLaVAModel(nn.Module): # what do we inherit?
     def __init__(self, 
-                 vision_checkpoint="google/siglip2-base-patch32-256", 
+                 vision_checkpoint="google/siglip2-base-patch32-256", # patches of 32x32 and resize to at least 256 by 256 # transformers only take fixed size input
                  lm_checkpoint="LiquidAI/LFM2-350M"
                  ): #do we add a Config or other Arguments/args into this initialization?
         # init vision enc
@@ -91,6 +93,10 @@ class LLaVAModel(): # what do we inherit?
 
 def main():
     print("Hello from llava-implementation!")
+
+    dataloader = Dataloader... # shape(batchsize, 
+    for batch in dataloader:
+        (batch_img, batch_text) = batch
     
     #Training
     train_args = TrainingArguments(
@@ -143,6 +149,7 @@ if __name__ == "__main__":
 (Tokenized X_q)
     |
     | Going from tokenization to embedding =?
+    | Embed_tokens = Embedding() in LFM2
     V
 (H_q): language embedding of dim equal to LM input dim
 
