@@ -8,18 +8,23 @@ See the end of the file for notes on the complete workflow:
 # imports
 from transformers import AutoModel, AutoProcessor, AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
 from torch import DataLoader, Dataset
+import torch.nn as nn
 from datasets import load_dataset
 import torch
 
 
 # << dataset definition >>
-    # class LLaVADataset(torch.Dataset):
-    #     def __init__():
-    #         temp = 1
-    #         #what normally goes in here, a transform? the function to find the image from 'image' ?
-    #         # does tokenization go here????
-    #      __len__(self)
-    #       __getitem__(self,idx)
+class LLaVADataset(Dataset):
+    def __init__():
+        temp = 1
+        #what normally goes in here, a transform? the function to find the image from 'image' ?
+        # does tokenization go here????
+    def __len__(self):
+        temp = 1
+
+    def __getitem__(self,idx):
+        temp = 1
+
 
     # Example data point, corresponding to the way I loaded data in brainstorming.ipynb "load instruction tuning dataset"
     # data[0] =
@@ -41,11 +46,11 @@ import torch
 
 
 # << llava model definition >>
-class LLaVAModel(nn.Module): # what do we inherit?
+class LLaVAModel(nn.Module):
     def __init__(self, 
                  vision_checkpoint="google/siglip2-base-patch32-256", # patches of 32x32 and resize to at least 256 by 256 # transformers only take fixed size input
                  lm_checkpoint="LiquidAI/LFM2-350M"
-                 ): #do we add a Config or other Arguments/args into this initialization?
+                 ):
         # init vision enc
         self.vision_enc = AutoModel.from_pretrained(vision_checkpoint, device_map="auto").eval()
         self.vision_proc = AutoProcessor.from_pretrained(vision_checkpoint)
@@ -58,23 +63,31 @@ class LLaVAModel(nn.Module): # what do we inherit?
              # attn_implementation="flash_attention_2" <- uncomment on compatible GPU
         ) # do we .eval() ?
         self.lm_tokenizer = AutoTokenizer.from_pretrained(lm_checkpoint)
+
+        # dimensions
+        self.v_dim = self.vision_enc.config.vision_config.hidden_size # not accounting for scenario where these attributes do not exist ..
+        self.lm_dim = self.lm.config.hidden_size # assuming these attributes exist.
+        
         # init projection
-        self.W = torch.tensor()
-        # do we need to get dimensions?
-        # v_dim = self.vision_enc.out_proj #or something like this 
-        # lm_dim = self.lm.dimension #some attribute of the lm has the dimension
+        # What initialization of weights?
+        self.W = torch.zeros([self.v_dim, self.lm_dim], dtype=torch.float32)
+        
         # self.W = tensor with shape v_dim, lm_dim
 
     # inside this - forward?
     # loss / compute gradient?
-    # Does transformers abstract any of this away. with a Training class?
-    def fwd(self, input, lang_embedding): 
+    def forward(self, x, lang_embedding): 
+        """ Forward pass
+        Args:
+            x : X_v in the paper
+            lang_embedding : text instruction after tokenization and conversion to an embedding
+        """
         # pseudocode ish
         # pass in attributes or just the model itself?
         # pass in the dimensionss (vision enc dim, language emb dim) as params or extract within the function?
         # pass in proj matrix or instantiate it here?
 
-        z_v = self.vision_enc(input)
+        z_v = self.vision_enc(x)
         h_v = self.W @ z_v
         all_tokens = torch.cat([h_v, lang_embedding], dim=1)
         llm_response = self.lm.get_response(all_tokens)
@@ -94,20 +107,11 @@ class LLaVAModel(nn.Module): # what do we inherit?
 def main():
     print("Hello from llava-implementation!")
 
-    dataloader = Dataloader... # shape(batchsize, 
+    dataloader = DataLoader() # shape(batchsize, ... # todo: finish
     for batch in dataloader:
         (batch_img, batch_text) = batch
     
-    #Training
-    train_args = TrainingArguments(
-        ...
-    )
-
-    trainer = Trainer(
-        ...,
-        args = train_args,
-    )
-    trainer.train()
+    # training
 
 
 if __name__ == "__main__":
