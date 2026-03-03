@@ -6,43 +6,34 @@ See the end of the file for notes on the complete workflow:
 """
 
 # imports
-from transformers import AutoModel, AutoProcessor, AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
-from torch import DataLoader, Dataset
+from transformers import AutoModel, AutoProcessor, AutoModelForCausalLM, AutoTokenizer
+from torch.utils.data import DataLoader, Dataset
 import torch.nn as nn
 from datasets import load_dataset
 import torch
+import os
+import PIL 
 
 
 # << dataset definition >>
 class LLaVADataset(Dataset):
-    def __init__():
-        temp = 1
-        #what normally goes in here, a transform? the function to find the image from 'image' ?
-        # does tokenization go here????
+    def __init__(self, hf_dir="liuhaotian/LLaVA-Instruct-150K", coco_dir=None):
+        self.data = load_dataset("json", data_files="liuhaotian/LLaVA-Instruct-150K")["train"]
+        self.coco_img_dir = coco_dir
+    
     def __len__(self):
-        temp = 1
+        return len(self.data)
 
-    def __getitem__(self,idx):
-        temp = 1
-
-
-    # Example data point, corresponding to the way I loaded data in brainstorming.ipynb "load instruction tuning dataset"
-    # data[0] =
-    # {'id': '000000033471',
-    #  'image': '000000033471.jpg',
-    #  'conversations': [{'from': 'human',
-    #    'value': '<image>\nWhat are the colors of the bus in the image?'},
-    #   {'from': 'gpt', 'value': 'The bus in the image is white and red.'},
-    #   {'from': 'human',
-    #    'value': 'What feature can be seen on the back of the bus?'},
-    #   {'from': 'gpt', 'value': 'The back of the bus features an advertisement.'},
-    #   {'from': 'human',
-    #    'value': 'Is the bus driving down the street or pulled off to the side?'},
-    #   {'from': 'gpt',
-    #    'value': 'The bus is driving down the street, which is crowded with people and other vehicles.'}]}
+    def __getitem__(self,idx): # how we access an item of the dataset
+        example = self.data[idx]
+        # join local coco images with the example
+        filename = example['image']
+        img_path = os.path.join(self.coco_img_dir, filename)
+        image = PIL.Image.open(img_path) if os.path.exists(img_path) else None # do we use None here or let Error get raised?
+        example_conversation = example['conversations']
+        return image, example_conversation
 
 
-# << dataloader >>
 
 
 # << llava model definition >>
@@ -72,10 +63,6 @@ class LLaVAModel(nn.Module):
         # What initialization of weights?
         self.W = torch.zeros([self.v_dim, self.lm_dim], dtype=torch.float32)
         
-        # self.W = tensor with shape v_dim, lm_dim
-
-    # inside this - forward?
-    # loss / compute gradient?
     def forward(self, x, lang_embedding): 
         """ Forward pass
         Args:
@@ -90,15 +77,9 @@ class LLaVAModel(nn.Module):
         z_v = self.vision_enc(x)
         h_v = self.W @ z_v
         all_tokens = torch.cat([h_v, lang_embedding], dim=1)
-        llm_response = self.lm.get_response(all_tokens)
+        llm_response = self.lm.get_response(all_tokens) # Is this the correct way to get response? lm.generate()?
         return llm_response # or maybe don't need response for this? or not sure
 
-# << def trainer/training arguments >>
-    # Do we do this in main()?
-    # Notes from HF:
-        # Trainer is a complete training and evaluation loop for Transformers’ PyTorch models. 
-        # Pass your model, dataset, preprocessor, and TrainingArguments to Trainer, and call train() to start training.
-    # --> Probably don't need to make a custom class
     # do we need to define train_step?
     # def train_step(W, other inputs):
     #   forward -> compute loss on ground truth -> backprop
@@ -107,7 +88,12 @@ class LLaVAModel(nn.Module):
 def main():
     print("Hello from llava-implementation!")
 
-    dataloader = DataLoader() # shape(batchsize, ... # todo: finish
+    dataset = LLaVADataset(hf_dir = "liuhaotian/LLaVA-Instruct-150K")
+
+    dataloader = DataLoader(
+        dataset=dataset,
+        batch_size = 8,
+        num_workers = 1) # shape(batchsize, ... # todo: finish
     for batch in dataloader:
         (batch_img, batch_text) = batch
     
