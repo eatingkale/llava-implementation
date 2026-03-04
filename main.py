@@ -52,19 +52,17 @@ class LLaVAModel(nn.Module):
              device_map="auto",
              torch_dtype="bfloat16",
              # attn_implementation="flash_attention_2" <- uncomment on compatible GPU
-        ) # do we .eval() ?
+        ).eval() # do we eval() ?
         self.lm_tokenizer = AutoTokenizer.from_pretrained(lm_checkpoint)
 
         # dimensions
         self.v_dim = self.vision_enc.config.vision_config.hidden_size # not accounting for scenario where these attributes do not exist ..
         self.lm_dim = self.lm.config.hidden_size # assuming these attributes exist.
         
-        # init projection
-        # What initialization of weights? I know of xavier, he, and of course there is random? and zeros.
-        # Their repo initializes W as nn.Linear(out_features, in_features): which initializes ~ U \in (-√k, √k)
-        # where k = 1/in_features
+        # init projection: 
+        # initializes weights ~ U \in (-√k, √k) where k = 1/in_features
         # self.W = torch.zeros([self.v_dim, self.lm_dim], dtype=torch.float32) # retiring this
-        self.W = nn.Linear(self.lm_dim, self.v_dim, dtype=torch.float32) 
+        self.W = nn.Linear(in_features = self.v_dim, out_features = self.lm_dim, dtype=torch.float32)
         
     def forward(self, x, lang_embedding): 
         """ Forward pass
