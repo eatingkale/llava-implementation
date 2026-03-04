@@ -62,7 +62,7 @@ class LLaVAModel(nn.Module):
         # init projection: 
         # initializes weights ~ U \in (-√k, √k) where k = 1/in_features
         # self.W = torch.zeros([self.v_dim, self.lm_dim], dtype=torch.float32) # retiring this
-        self.W = nn.Linear(in_features = self.v_dim, out_features = self.lm_dim, dtype=torch.float32)
+        self.W = nn.Linear(in_features = self.v_dim, out_features = self.lm_dim, dtype=torch.bfloat16)
         
     def forward(self, x, lang_embedding): 
         """ Forward pass
