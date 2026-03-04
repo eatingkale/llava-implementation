@@ -42,6 +42,7 @@ class LLaVAModel(nn.Module):
                  lm_checkpoint="LiquidAI/LFM2-350M"
                  ):
         # init vision enc
+        super().__init__()
         self.vision_enc = AutoModel.from_pretrained(vision_checkpoint, device_map="auto").eval()
         self.vision_proc = AutoProcessor.from_pretrained(vision_checkpoint)
 
