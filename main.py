@@ -12,7 +12,7 @@ import PIL
 class LLaVADataset(Dataset):
     def __init__(self, hf_dir="data/llava_instruct_150k.json", coco_dir=None): # TODO: replace None with a directory once downloaded images
         self.data = load_dataset("json", data_files=hf_dir)["train"]
-        self.coco_img_dir = coco_dir
+        self.coco_dir = coco_dir
     
     def __len__(self):
         return len(self.data)
@@ -21,7 +21,7 @@ class LLaVADataset(Dataset):
         example = self.data[idx]
         # join local coco images with the example
         filename = example['image']
-        if self.coco_img_dir is None:
+        if self.coco_dir is None:
             return example['conversations'] # TODO: fix this behavior -- is this the right behavior? what do we do when the image doesn't exist? 
                                             # when do we address this point? it certainly can't be at the time of accessing the data;
                                             # but as it stands now, all that's necessary to create a LLaVADataset is the json.
@@ -29,7 +29,7 @@ class LLaVADataset(Dataset):
                                             # with the 'image' filename was less than 158k (approx. 100k). 
                                             # Where it's handled may not matter much, and the impact will just be that we leverage *less*
                                             # instruction-tuning data.
-        img_path = os.path.join(self.coco_img_dir, filename)
+        img_path = os.path.join(self.coco_dir, filename)
         image = PIL.Image.open(img_path) if os.path.exists(img_path) else None # do we use None here or let Error get raised?
         example_conversation = example['conversations']
         return image, example_conversation
