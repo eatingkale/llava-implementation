@@ -1,24 +1,17 @@
-"""
-This is where the full implementation will be.
-
-See the end of the file for notes on the complete workflow:
-
-"""
-
 # imports
+import torch
 from transformers import AutoModel, AutoProcessor, AutoModelForCausalLM, AutoTokenizer
 from torch.utils.data import DataLoader, Dataset
 import torch.nn as nn
 from datasets import load_dataset
-import torch
 import os
 import PIL 
 
 
 # << dataset definition >>
 class LLaVADataset(Dataset):
-    def __init__(self, hf_dir="liuhaotian/LLaVA-Instruct-150K", coco_dir=None):
-        self.data = load_dataset("json", data_files="liuhaotian/LLaVA-Instruct-150K")["train"]
+    def __init__(self, hf_dir="data/llava_instruct_150k.json", coco_dir=None): # TODO: replace None with a directory once downloaded images
+        self.data = load_dataset("json", data_files=hf_dir)["train"]
         self.coco_img_dir = coco_dir
     
     def __len__(self):
@@ -28,12 +21,18 @@ class LLaVADataset(Dataset):
         example = self.data[idx]
         # join local coco images with the example
         filename = example['image']
+        if self.coco_img_dir is None:
+            return example['conversations'] # TODO: fix this behavior -- is this the right behavior? what do we do when the image doesn't exist? 
+                                            # when do we address this point? it certainly can't be at the time of accessing the data;
+                                            # but as it stands now, all that's necessary to create a LLaVADataset is the json.
+                                            # From brainstorming.ipynb, we saw that the actual number of images from coco that aligned
+                                            # with the 'image' filename was less than 158k (approx. 100k). 
+                                            # Where it's handled may not matter much, and the impact will just be that we leverage *less*
+                                            # instruction-tuning data.
         img_path = os.path.join(self.coco_img_dir, filename)
         image = PIL.Image.open(img_path) if os.path.exists(img_path) else None # do we use None here or let Error get raised?
         example_conversation = example['conversations']
         return image, example_conversation
-
-
 
 
 # << llava model definition >>
@@ -60,7 +59,7 @@ class LLaVAModel(nn.Module):
         self.lm_dim = self.lm.config.hidden_size # assuming these attributes exist.
         
         # init projection
-        # What initialization of weights?
+        # What initialization of weights? I know of xavier, he, and of course there is random? and zeros. the paper doesn't specify how they initialize; maybe let's look at their repo --> their repo 
         self.W = torch.zeros([self.v_dim, self.lm_dim], dtype=torch.float32)
         
     def forward(self, x, lang_embedding): 
@@ -88,16 +87,22 @@ class LLaVAModel(nn.Module):
 def main():
     print("Hello from llava-implementation!")
 
-    dataset = LLaVADataset(hf_dir = "liuhaotian/LLaVA-Instruct-150K")
+    dataset = LLaVADataset()
+    print(dataset.data)
+    print(dataset.coco_img_dir)
+    example = dataset[0]
+    print(example)
+    
 
-    dataloader = DataLoader(
-        dataset=dataset,
-        batch_size = 8,
-        num_workers = 1) # shape(batchsize, ... # todo: finish
-    for batch in dataloader:
-        (batch_img, batch_text) = batch
+    # dataloader = DataLoader(
+    #     dataset=dataset,
+    #     batch_size = 8,
+    #     num_workers = 1) # shape(batchsize, ... # todo: finish
+    # for batch in dataloader:
+    #     (batch_img, batch_text) = batch
     
     # training
+    # "...fine-tune on the proposed LLaVA-Instruct-158K dataset for 3 epochs, with a learning rate of 2e-5 and a batch size of 32"
 
 
 if __name__ == "__main__":
