@@ -23,7 +23,7 @@ class LLaVADataset(Dataset):
         filename = example['image']
         if self.coco_dir is None:
             return example['conversations'] # TODO: fix this behavior -- is this the right behavior? what do we do when the image doesn't exist? 
-                                            # when do we address this point? it certainly can't be at the time of accessing the data;
+                                            # when do we address this point? it certainly can't be at the time of accessing the data; (or can it?? i.e. we skip?)
                                             # but as it stands now, all that's necessary to create a LLaVADataset is the json.
                                             # From brainstorming.ipynb, we saw that the actual number of images from coco that aligned
                                             # with the 'image' filename was less than 158k (approx. 100k). 
@@ -32,7 +32,7 @@ class LLaVADataset(Dataset):
         img_path = os.path.join(self.coco_dir, filename)
         image = PIL.Image.open(img_path) if os.path.exists(img_path) else None # do we use None here or let Error get raised?
         example_conversation = example['conversations']
-        return image, example_conversation
+        return image, example_conversation # image,label
 
 
 # << llava model definition >>
@@ -72,21 +72,12 @@ class LLaVAModel(nn.Module):
             x : X_v in the paper
             lang_embedding : text instruction after tokenization and conversion to an embedding
         """
-        # pseudocode ish
-        # pass in attributes or just the model itself?
-        # pass in the dimensionss (vision enc dim, language emb dim) as params or extract within the function?
-        # pass in proj matrix or instantiate it here?
-
         z_v = self.vision_enc(x)
         h_v = self.W @ z_v
         all_tokens = torch.cat([h_v, lang_embedding], dim=1)
-        llm_response = self.lm.get_response(all_tokens) # Is this the correct way to get response? lm.generate()?
+        llm_response = self.lm.get_response(all_tokens) # get_response possibly slow
         return llm_response # or maybe don't need response for this? or not sure
 
-    # do we need to define train_step?
-    # def train_step(W, other inputs):
-    #   forward -> compute loss on ground truth -> backprop
-    #   return new weights 
 
 def main():
     print("Hello from llava-implementation!")
