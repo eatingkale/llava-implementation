@@ -60,8 +60,11 @@ class LLaVAModel(nn.Module):
         self.lm_dim = self.lm.config.hidden_size # assuming these attributes exist.
         
         # init projection
-        # What initialization of weights? I know of xavier, he, and of course there is random? and zeros. the paper doesn't specify how they initialize; maybe let's look at their repo --> their repo 
-        self.W = torch.zeros([self.v_dim, self.lm_dim], dtype=torch.float32)
+        # What initialization of weights? I know of xavier, he, and of course there is random? and zeros.
+        # Their repo initializes W as nn.Linear(out_features, in_features): which initializes ~ U \in (-√k, √k)
+        # where k = 1/in_features
+        # self.W = torch.zeros([self.v_dim, self.lm_dim], dtype=torch.float32) # retiring this
+        self.W = nn.Linear(self.lm_dim, self.v_dim, dtype=torch.float32) 
         
     def forward(self, x, lang_embedding): 
         """ Forward pass
@@ -90,9 +93,11 @@ def main():
 
     dataset = LLaVADataset()
     print(dataset.data)
-    print(dataset.coco_img_dir)
-    example = dataset[0]
-    print(example)
+    # example = dataset[0]
+    # print(example) # should just be the conversation without an image if self.coco_dir is None
+
+    model = LLaVAModel()
+    print(model.W.weight.min(), model.W.weight.max()) # target: close to √(1/in_features) = √(1/1024) = 1/32 = 0.03125
     
 
     # dataloader = DataLoader(
