@@ -94,20 +94,34 @@ def main():
         "loss": nn.BCELoss, # ONLY green sequence/tokens (assistant response/current pred token) are used to compute the loss in the auto-regressive model
                             # custom loss? or
     }
+    print("loss:", train_args['loss'])
 
+    # data loading
     dataloader = DataLoader(
         dataset=dataset,
         batch_size = train_args['batch_size'],
         num_workers = 1
     )
+
+    num_batches = len(dataset)/train_args['batch_size']
     
-    for epoch in train_args['num_epochs']:
-        for batch in dataloader: # may not be the right level of loop - 
+    # training
+    for epoch in range(train_args['num_epochs']):
+        for batch in dataloader: 
             (batch_img, batch_text) = batch # Randomly choose order of X_v, X_q ? for 1st turn (although i dont think it happens here)
-            
+            print(batch, "\n")
+            print(batch_img, "\n")
+            print(batch_text)
             # tokenize
-            batch_text = model.lm_tokenizer()
+            batch_text = model.lm_tokenizer #... continue 
+                                            # conversation is list of dicts 'from': and 'value':
+
+            # forward
             pred = model(batch) # loss computed only on certain tokens, see "loss"
+            pred.backward()
+
+            # compute loss and update weights
+            # do this 
             
     # training
 
