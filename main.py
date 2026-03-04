@@ -86,18 +86,30 @@ def main():
     # print(example) # should just be the conversation without an image if self.coco_dir is None
 
     model = LLaVAModel()
-    print(model.W.weight.min(), model.W.weight.max()) # target: close to √(1/in_features) = √(1/1024) = 1/32 = 0.03125
-    
 
-    # dataloader = DataLoader(
-    #     dataset=dataset,
-    #     batch_size = 8,
-    #     num_workers = 1) # shape(batchsize, ... # todo: finish
-    # for batch in dataloader:
-    #     (batch_img, batch_text) = batch
+    train_args = {
+        "batch_size": 8, # 32 in paper
+        "learning_rate": .00002,
+        "num_epochs": 3,
+        "loss": nn.BCELoss, # ONLY green sequence/tokens (assistant response/current pred token) are used to compute the loss in the auto-regressive model
+                            # custom loss? or
+    }
+
+    dataloader = DataLoader(
+        dataset=dataset,
+        batch_size = train_args['batch_size'],
+        num_workers = 1
+    )
     
+    for epoch in train_args['num_epochs']:
+        for batch in dataloader: # may not be the right level of loop - 
+            (batch_img, batch_text) = batch # Randomly choose order of X_v, X_q ? for 1st turn (although i dont think it happens here)
+            
+            # tokenize
+            batch_text = model.lm_tokenizer()
+            pred = model(batch) # loss computed only on certain tokens, see "loss"
+            
     # training
-    # "...fine-tune on the proposed LLaVA-Instruct-158K dataset for 3 epochs, with a learning rate of 2e-5 and a batch size of 32"
 
 
 if __name__ == "__main__":
