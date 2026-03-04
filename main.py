@@ -115,10 +115,12 @@ def main():
             # tokenize
             batch_text = model.lm_tokenizer #... continue 
                                             # conversation is list of dicts 'from': and 'value':
+                                            # only compute loss on 'from': 'gpt'
 
             # forward
             pred = model(batch) # loss computed only on certain tokens, see "loss"
-            pred.backward()
+            loss = train_args['loss'](pred)
+            loss.backward()
 
             # compute loss and update weights
             # do this 
