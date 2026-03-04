@@ -107,7 +107,7 @@ def main():
     
     # training
     for epoch in range(train_args['num_epochs']):
-        for batch in dataloader: 
+        for batch in dataloader: # TODO: RuntimeError: each element in list of batch should be of equal size
             (batch_img, batch_text) = batch # Randomly choose order of X_v, X_q ? for 1st turn (although i dont think it happens here)
             print(batch, "\n")
             print(batch_img, "\n")
